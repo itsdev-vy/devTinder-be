@@ -1,0 +1,24 @@
+{
+  "name": "devtinder-be",
+  "version": "1.0.0",
+  "description": "tinder for devs",
+  "keywords": [
+    "node",
+    "express",
+    "mongo",
+    "mern",
+    "aws"
+  ],
+  "license": "ISC",
+  "author": "Vinay Yadav",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "dev": "nodemon src/app.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "nodemon": "^3.1.9"
+  }
+}
