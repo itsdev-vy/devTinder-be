@@ -1,7 +1,9 @@
+const dotenv = require('dotenv');
 const express = require('express');
 const connectDB = require('./config/database');
 const app = express();
 const User = require('./models/User');
+dotenv.config({ path: './.env' })
 
 // Middleware to parse JSON
 app.use(express.json());
@@ -93,8 +95,8 @@ app.put("/user", async (req, res) => {
 
 connectDB().then(() => {
     console.log('Database connected');
-    app.listen(3000, () => {
-        console.log('Server started on port 3000');
+    app.listen(process.env.PORT, () => {
+        console.log('Server started on port 8000');
     });
 }).catch((err) => {
     console.log(err);
