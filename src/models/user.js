@@ -9,17 +9,22 @@ const userSchema = new mongoose.Schema({
     },
     lastName: {
         type: String,
+        minLength: 3,
+        maxLength: 20
     },
     emailId: {
         type: String,
         lowercase: true,
         trim: true,
         required: true,
-        unique: true
+        unique: true,
+        // immutable: true // This will make sure that the emailId field cannot be updated once set. As it will not throw any error and silently ignore the update operation user gets confused what went wrong that's why we will implement this in api level not this approach.
     },
     password: {
         type: String,
-        required: true
+        required: true,
+        minLength: 8,
+        maxLength: 20
     },
     age: {
         type: Number,
@@ -44,10 +49,17 @@ const userSchema = new mongoose.Schema({
     },
     about: {
         type: String,
-        default: "Hey there! It's a default value."
+        default: "Hey there! It's a default value.",
+        maxLength: 200
     },
     skills: {
-        type: [String]
+        type: [String],
+        validate: {
+            validator: function (arr) {
+                return arr.length <= 5; // Limit to 10 elements
+            },
+            message: 'You can have a maximum of 5 skills.'
+        }
     },
 }, { timestamps: true });
 
