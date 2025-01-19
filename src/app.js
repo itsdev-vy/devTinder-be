@@ -2,7 +2,7 @@ const dotenv = require('dotenv');
 const express = require('express');
 const connectDB = require('./config/database');
 const app = express();
-const User = require('./models/User');
+const User = require('./models/user');
 dotenv.config({ path: './.env' })
 
 // Middleware to parse JSON
@@ -19,6 +19,9 @@ app.post("/signup", async (req, res) => {
             password: req.body.password,
             age: req.body.age,
             gender: req.body.gender,
+            photoUrl: req.body.photoUrl,
+            about: req.body.about,
+            skills: req.body.skills,
         });
 
         await user.save();
@@ -81,7 +84,7 @@ app.delete("/user", async (req, res) => {
 app.put("/user", async (req, res) => {
     const userId = req.body.userId;
     try {
-        const user = await User.findByIdAndUpdate({ _id: userId }, { firstName: req.body.updatedData }, { new: true });
+        const user = await User.findByIdAndUpdate({ _id: userId }, { firstName: req.body.updatedData }, { new: true, runValidators: true });
         if (user) {
             res.status(200).send({ message: "User updated successfully!" });
         } else {
