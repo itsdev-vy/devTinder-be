@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const validator = require('validator');
 
 const userSchema = new mongoose.Schema({
     firstName: {
@@ -18,13 +19,23 @@ const userSchema = new mongoose.Schema({
         trim: true,
         required: true,
         unique: true,
+        validate(value) {
+            if (!validator.isEmail(value)) {
+                throw new Error('Invalid email' + value);
+            }
+        }
         // immutable: true // This will make sure that the emailId field cannot be updated once set. As it will not throw any error and silently ignore the update operation user gets confused what went wrong that's why we will implement this in api level not this approach.
     },
     password: {
         type: String,
         required: true,
-        minLength: 8,
-        maxLength: 20
+        // minLength: 8,
+        // maxLength: 20,
+        validate(value) {
+            if (!validator.isStrongPassword(value)) {
+                throw new Error('Password is not strong enough');
+            }
+        }
     },
     age: {
         type: Number,
@@ -45,7 +56,12 @@ const userSchema = new mongoose.Schema({
     },
     photoUrl: {
         type: String,
-        default: "https://www.strasys.uk/wp-content/uploads/2022/02/Depositphotos_484354208_S.jpg"
+        default: "https://www.strasys.uk/wp-content/uploads/2022/02/Depositphotos_484354208_S.jpg",
+        validate(value) {
+            if (!validator.isURL(value)) {
+                throw new Error('Invalid URL');
+            }
+        }
     },
     about: {
         type: String,
@@ -56,7 +72,7 @@ const userSchema = new mongoose.Schema({
         type: [String],
         validate: {
             validator: function (arr) {
-                return arr.length <= 5; // Limit to 10 elements
+                return arr.length <= 5; // Limit to 5 elements
             },
             message: 'You can have a maximum of 5 skills.'
         }

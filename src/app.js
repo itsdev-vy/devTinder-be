@@ -11,19 +11,8 @@ app.use(express.json());
 
 //signup
 app.post("/signup", async (req, res) => {
+    const user = new User(req.body);
     try {
-        const user = new User({
-            firstName: req.body.firstName,
-            lastName: req.body.lastName,
-            emailId: req.body.emailId,
-            password: req.body.password,
-            age: req.body.age,
-            gender: req.body.gender,
-            photoUrl: req.body.photoUrl,
-            about: req.body.about,
-            skills: req.body.skills,
-        });
-
         await user.save();
         res.status(201).send({ message: "User registered successfully!" });
     } catch (error) {
@@ -94,6 +83,10 @@ app.patch("/user/:userId", async (req, res) => {
 
         if (!isUpdateAllowed) {
             throw new Error("Update not allowed!");
+        }
+
+        if (data?.skills.length > 10) {
+            throw new Error("You can have a maximum of 10 skills.");
         }
 
         const user = await User.findByIdAndUpdate({ _id: userId }, data, { returnDocument: "after", runValidators: true });
