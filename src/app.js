@@ -1,8 +1,13 @@
 const dotenv = require('dotenv');
+
 const express = require('express');
 const connectDB = require('./config/database');
+
 const app = express();
 const User = require('./models/user');
+const { validateSignUpData } = require('./utils/validation');
+
+const bcrypt = require('bcrypt');
 dotenv.config({ path: './.env' })
 
 // Middleware to parse JSON
@@ -11,14 +16,60 @@ app.use(express.json());
 
 //signup
 app.post("/signup", async (req, res) => {
-    const user = new User(req.body);
+    const { firstName, lastName, emailId, password } = req.body;
+
     try {
+        //validating user data
+        validateSignUpData(req);
+
+        //checking if user already exists
+        const userExists = await User.findOne({ emailId: emailId });
+        if (userExists) {
+            return res.status(400).send({ error: "User already exists" });
+        }
+
+        //Encrypting password
+        const passwordHash = await bcrypt.hash(password, 10);
+
+        //creating new instance of user
+        const user = new User({
+            firstName,
+            lastName,
+            emailId,
+            password: passwordHash,
+        });
+
         await user.save();
         res.status(201).send({ message: "User registered successfully!" });
     } catch (error) {
         res.status(500).send({ error: "Error registering user", details: error.message });
     }
 });
+
+//login
+app.post("/login", async (req, res) => {
+    const { emailId, password } = req.body;
+
+    if (!emailId && !password) {
+        return res.status(400).send({ error: "Email and password are required" });
+    }
+
+    try {
+        const user = await User.findOne({ emailId: emailId });
+        if (user) {
+            const isPasswordValid = await bcrypt.compare(password, user.password);
+            if (isPasswordValid) {
+                res.status(200).send({ message: "User logged in successfully!" });
+            } else {
+                res.status(401).send({ error: "Invalid credentials" });
+            }
+        } else {
+            res.status(404).send({ error: "User not found" });
+        }
+    } catch (error) {
+        res.status(500).send({ error: "Error logging in user", details: error.message });
+    }
+})
 
 
 //get user by email
