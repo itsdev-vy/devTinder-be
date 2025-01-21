@@ -3,15 +3,20 @@ const dotenv = require('dotenv');
 const express = require('express');
 const connectDB = require('./config/database');
 
-const app = express();
 const User = require('./models/user');
 const { validateSignUpData } = require('./utils/validation');
 
 const bcrypt = require('bcrypt');
+const cookieParser = require('cookie-parser');
+const jwt = require('jsonwebtoken');
+
 dotenv.config({ path: './.env' })
 
-// Middleware to parse JSON
+const app = express();
+
+// Middlewares
 app.use(express.json());
+app.use(cookieParser());
 
 
 //signup
@@ -58,7 +63,12 @@ app.post("/login", async (req, res) => {
         const user = await User.findOne({ emailId: emailId });
         if (user) {
             const isPasswordValid = await bcrypt.compare(password, user.password);
+
             if (isPasswordValid) {
+                const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+
+                res.cookie('token', token, { httpOnly: true });
+
                 res.status(200).send({ message: "User logged in successfully!" });
             } else {
                 res.status(401).send({ error: "Invalid credentials" });
@@ -68,6 +78,33 @@ app.post("/login", async (req, res) => {
         }
     } catch (error) {
         res.status(500).send({ error: "Error logging in user", details: error.message });
+    }
+})
+
+//profile
+app.get("/profile", async (req, res) => {
+    try {
+        const cookies = req.cookies;
+
+        const { token } = cookies;
+
+        if (!token) {
+            throw new Error("Invalid token");
+        }
+
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+        const { _id } = decoded;
+
+        const user = await User.findById(_id);
+
+        if (!user) {
+            return res.status(404).send({ error: "User not found" });
+        } else {
+            return res.status(200).send(user);
+        }
+    } catch (error) {
+        res.status(500).send({ error: "Error fetching profile", details: error.message });
     }
 })
 
