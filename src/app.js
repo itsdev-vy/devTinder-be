@@ -8,7 +8,7 @@ const { validateSignUpData } = require('./utils/validation');
 
 const bcrypt = require('bcrypt');
 const cookieParser = require('cookie-parser');
-const jwt = require('jsonwebtoken');
+const { userAuth } = require('./middlewares/auth');
 
 dotenv.config({ path: './.env' })
 
@@ -51,6 +51,7 @@ app.post("/signup", async (req, res) => {
     }
 });
 
+
 //login
 app.post("/login", async (req, res) => {
     const { emailId, password } = req.body;
@@ -62,13 +63,11 @@ app.post("/login", async (req, res) => {
     try {
         const user = await User.findOne({ emailId: emailId });
         if (user) {
-            const isPasswordValid = await bcrypt.compare(password, user.password);
+            const isPasswordValid = await user.validatePassword(password);
 
             if (isPasswordValid) {
-                const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-
-                res.cookie('token', token, { httpOnly: true });
-
+                const token = await user.getJwt();
+                res.cookie('token', token, { expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), httpOnly: true });
                 res.status(200).send({ message: "User logged in successfully!" });
             } else {
                 res.status(401).send({ error: "Invalid credentials" });
@@ -81,23 +80,11 @@ app.post("/login", async (req, res) => {
     }
 })
 
+
 //profile
-app.get("/profile", async (req, res) => {
+app.get("/profile", userAuth, async (req, res) => {
     try {
-        const cookies = req.cookies;
-
-        const { token } = cookies;
-
-        if (!token) {
-            throw new Error("Invalid token");
-        }
-
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-        const { _id } = decoded;
-
-        const user = await User.findById(_id);
-
+        const user = req.user;
         if (!user) {
             return res.status(404).send({ error: "User not found" });
         } else {
@@ -105,86 +92,6 @@ app.get("/profile", async (req, res) => {
         }
     } catch (error) {
         res.status(500).send({ error: "Error fetching profile", details: error.message });
-    }
-})
-
-
-//get user by email
-app.get("/user", async (req, res) => {
-    const userEmail = req.body.emailId;
-
-    try {
-        const user = await User.findOne({ emailId: userEmail });
-        if (user) {
-            res.status(200).send(user);
-        } else {
-            res.status(404).send({ error: "User not found" });
-        }
-    } catch (error) {
-        res.status(500).send({ error: "Error fetching user", details: error.message });
-    }
-})
-
-
-//get all users
-app.get("/feed", async (req, res) => {
-    try {
-        const user = await User.find({});
-        if (user) {
-            res.status(200).send(user);
-        } else {
-            res.status(404).send({ error: "No user found" });
-        }
-    } catch (error) {
-        res.status(500).send({ error: "Error fetching users", details: error.message });
-    }
-})
-
-//delete user
-
-app.delete("/user", async (req, res) => {
-    const userId = req.body.userId;
-    try {
-        const user = await User.findByIdAndDelete({ _id: userId });
-        if (user) {
-            res.status(200).send({ message: "User deleted successfully!" });
-        } else {
-            res.status(404).send({ error: "User not found" });
-        }
-    } catch (error) {
-        res.status(500).send({ error: "Error deleting user", details: error.message });
-    }
-})
-
-//update user
-
-app.patch("/user/:userId", async (req, res) => {
-    const userId = req.params?.userId;
-    const data = req.body;
-
-    try {
-        const ALLOWED_UPDATES = ['age', 'gender', 'photoUrl', 'about', 'skills'];
-
-        const isUpdateAllowed = Object.keys(data).every((update) => {
-            return ALLOWED_UPDATES.includes(update);
-        });
-
-        if (!isUpdateAllowed) {
-            throw new Error("Update not allowed!");
-        }
-
-        if (data?.skills.length > 10) {
-            throw new Error("You can have a maximum of 10 skills.");
-        }
-
-        const user = await User.findByIdAndUpdate({ _id: userId }, data, { returnDocument: "after", runValidators: true });
-        if (user) {
-            res.status(200).send({ message: "User updated successfully!" });
-        } else {
-            res.status(404).send({ error: "User not found" });
-        }
-    } catch (error) {
-        res.status(500).send({ error: "Error updating user", details: error.message });
     }
 })
 
