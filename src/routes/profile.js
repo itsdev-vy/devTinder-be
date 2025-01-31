@@ -44,7 +44,11 @@ profileRouter.patch("/profile/edit", userAuth, async (req, res) => {
 profileRouter.patch("/profile/password", userAuth, async (req, res) => {
     const user = req.user;
 
-    const { newPassword, confirmNewPassword } = req.body;
+    const { currentPassword, newPassword, confirmNewPassword } = req.body;
+
+    if (!currentPassword || !newPassword || !confirmNewPassword) {
+        return res.status(400).json({ error: 'All fields are required' });
+    }
 
     if (newPassword !== confirmNewPassword) {
         return res.status(400).send({ error: "Passwords do not match" });
@@ -54,17 +58,13 @@ profileRouter.patch("/profile/password", userAuth, async (req, res) => {
         return res.status(404).send({ error: "User not found" });
     }
 
-    if (!req.body.password) {
-        return res.status(400).send({ error: "Password is required" });
-    }
+    const isPasswordMatched = await user.validatePassword(currentPassword);
 
-    const isPasswordValid = await user.validatePassword(req.body.password);
-
-    if (isPasswordValid) {
+    if (isPasswordMatched) {
         const passwordHash = await bcrypt.hash(newPassword, 10);
         user.password = passwordHash;
         await user.save();
-        return res.status(200).send("Password updated successfully");
+        return res.status(200).send({ message: "Password updated successfully" });
     } else {
         return res.status(401).send({ error: "Invalid password" });
     }
