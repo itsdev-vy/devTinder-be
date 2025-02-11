@@ -51,7 +51,8 @@ authRouter.post("/login", async (req, res) => {
             if (isPasswordValid) {
                 const token = await user.getJwt();
                 res.cookie('token', token, { expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), httpOnly: true });
-                res.status(200).send({ message: "User logged in successfully!" });
+                const userWithoutPassword = await User.findOne({ emailId: emailId }).select("-password");
+                res.status(200).send({ message: "User logged in successfully!", data: userWithoutPassword });
             } else {
                 res.status(401).send({ error: "Invalid credentials" });
             }
