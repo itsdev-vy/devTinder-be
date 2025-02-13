@@ -47,10 +47,9 @@ userRouter.get('/user/connections', userAuth, async (req, res) => {
 });
 
 
-userRouter.get('/user/feed?page=1&limit=10', userAuth, async (req, res) => {
+userRouter.get('/user/feed', userAuth, async (req, res) => {
     try {
         const loggedInUser = req.user;
-
         const page = parseInt(req.query.page) || 1;
         let limit = parseInt(req.query.limit) || 10;
         limit = limit > 50 ? 50 : limit;
