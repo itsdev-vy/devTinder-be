@@ -29,8 +29,11 @@ authRouter.post('/signup', async (req, res) => {
             password: passwordHash,
         });
 
-        await user.save();
-        res.status(201).send({ message: "User registered successfully!" });
+        const savedUser = await user.save();
+        const token = await savedUser.getJwt();
+        res.cookie('token', token, { expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), httpOnly: true });
+        const userWithoutPassword = await User.findOne({ emailId: emailId }).select("-password");
+        res.status(201).send({ message: "User registered successfully!", data: userWithoutPassword });
     } catch (error) {
         res.status(500).send({ error: "Error registering user", details: error.message });
     }
