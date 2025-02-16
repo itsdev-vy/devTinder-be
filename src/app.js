@@ -30,7 +30,7 @@ app.use('/', userRouter);
 
 connectDB().then(() => {
     console.log('Database connected');
-    app.listen(process.env.PORT, () => {
+    app.listen(8000, () => {
         console.log('Server started on port 8000');
     });
 }).catch((err) => {
