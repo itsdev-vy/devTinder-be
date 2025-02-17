@@ -5,7 +5,8 @@ const connectDB = require('./config/database');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
 
-dotenv.config({ path: './.env' })
+const envFile = process.env.NODE_ENV === 'production' ? '.env.production' : '.env.local';
+dotenv.config({ path: envFile });
 
 const app = express();
 
@@ -30,8 +31,8 @@ app.use('/', userRouter);
 
 connectDB().then(() => {
     console.log('Database connected');
-    app.listen(7777, () => {
-        console.log('Server started on port 7777');
+    app.listen(process.env.PORT, () => {
+        console.log(`Server started on port ${process.env.PORT}`);
     });
 }).catch((err) => {
     console.log(err);

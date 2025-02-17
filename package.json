@@ -14,10 +14,11 @@
   "type": "commonjs",
   "main": "index.js",
   "scripts": {
-    "start": "node src/app.js",
-    "dev": "nodemon src/app.js"
+    "start": "NODE_ENV=production node src/app.js",
+    "dev": "NODE_ENV=development nodemon src/app.js"
   },
   "dependencies": {
+    "@aws-sdk/client-ses": "^3.749.0",
     "bcrypt": "^5.1.1",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",

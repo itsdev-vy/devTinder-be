@@ -5,6 +5,8 @@ const { userAuth } = require('../middlewares/auth');
 const ConnectionRequest = require('../models/connectionRequest');
 const User = require('../models/user');
 
+const { run } = require('../utils/sendEmail');
+
 requestRouter.post('/request/send/:status/:toUserId', userAuth, async (req, res) => {
     try {
         const fromUserId = req.user._id;
@@ -40,7 +42,7 @@ requestRouter.post('/request/send/:status/:toUserId', userAuth, async (req, res)
         });
 
         const data = await connectionRequest.save();
-
+        await run("iamsupremetrader@gmail.com", "itsvinayadav@gmail.com", "AWS SES Testing!", 'Hello Its a test mail from AWS');
         res.status(200).json({ message: "Connection request sent successfully", data });
     } catch (error) {
         res.status(500).send({ message: error.message });
