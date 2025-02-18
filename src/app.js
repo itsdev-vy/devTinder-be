@@ -4,6 +4,8 @@ const express = require('express');
 const connectDB = require('./config/database');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
+const http = require('http');
+const initializeSocket = require('./utils/socket');
 
 const envFile = process.env.NODE_ENV === 'production' ? '.env.production' : '.env.local';
 dotenv.config({ path: envFile });
@@ -23,6 +25,7 @@ const profileRouter = require('./routes/profile');
 const requestRouter = require('./routes/request');
 const userRouter = require('./routes/user');
 const paymentRouter = require('./routes/payment');
+const chatRouter = require('./routes/chat');
 
 
 // Routes Declaration
@@ -31,11 +34,14 @@ app.use('/', profileRouter);
 app.use('/', requestRouter);
 app.use('/', userRouter);
 app.use('/', paymentRouter);
+app.use('/', chatRouter);
 
+const server = http.createServer(app);
+initializeSocket(server);
 
 connectDB().then(() => {
     console.log('Database connected');
-    app.listen(process.env.PORT, () => {
+    server.listen(process.env.PORT, () => {
         console.log(`Server started on port ${process.env.PORT}`);
     });
 }).catch((err) => {
