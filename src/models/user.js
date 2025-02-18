@@ -79,6 +79,13 @@ const userSchema = new mongoose.Schema({
             message: 'You can have a maximum of 5 skills.'
         }
     },
+    isPremium: {
+        type: Boolean,
+        default: false
+    },
+    membershipType: {
+        type: String,
+    },
 }, { timestamps: true });
 
 //Schema methods
